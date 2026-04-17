@@ -223,10 +223,10 @@ def export_cohort(cohort, output_dir, compress=True):
         save(test_dir / f"{idx}.npz",
              x_ts=te["x_ts"], x_static=te["x_static"], y=te["y"])
 
-        # Label counts
+        # Label counts as [[class_id, count], ...]
         y_all = np.concatenate([tr["y"], te["y"]])
         labels, counts = np.unique(y_all, return_counts=True)
-        label_counts.append({str(int(l)): int(c) for l, c in zip(labels, counts)})
+        label_counts.append([[int(l), int(c)] for l, c in zip(labels, counts)])
 
     config = {
         "task": meta.get("task"),
@@ -241,8 +241,13 @@ def export_cohort(cohort, output_dir, compress=True):
         "selection": meta.get("selection", {}),
         "client_label_counts": label_counts,
     }
+    # Custom serialization so client_label_counts gets one client per line
+    placeholder = "__LABEL_COUNTS__"
+    config["client_label_counts"] = placeholder
+    text = json.dumps(config, indent=2)
+    counts_lines = ",\n".join(f"    {json.dumps(c)}" for c in label_counts)
+    text = text.replace(f'"{placeholder}"', f"[\n{counts_lines}\n  ]")
     with open(output_dir / "config.json", "w") as f:
-        json.dump(config, f, indent=2)
-        f.write("\n")
+        f.write(text + "\n")
 
     print(f"[export] {len(clients)} clients → {output_dir}")
