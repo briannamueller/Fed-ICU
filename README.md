@@ -14,10 +14,10 @@ The eICU Collaborative Research Database contains over 200,000 ICU stays from 20
 
 ## Quickstart
 
-The repo includes the [eICU demo dataset](https://physionet.org/content/eicu-crd-demo/) so you can run the full pipeline without PhysioNet credentials.
+Requires Python 3.8+. The repo includes the [eICU demo dataset](https://physionet.org/content/eicu-crd-demo/) so you can run the full pipeline without PhysioNet credentials.
 
 ```bash
-pip install numpy pandas scikit-learn pyarrow pyyaml
+pip install -r requirements.txt
 
 bash run_pipeline.sh
 ```
@@ -159,6 +159,8 @@ All defaults live in `configs.yaml`. All three pipeline scripts read it automati
 ```
 Fed-eICU/
 ├── configs.yaml                # Default configuration for all stages
+├── requirements.txt            # Python dependencies
+├── run_pipeline.sh             # Run all three stages end-to-end
 ├── preprocess.py               # Stage 1: raw eICU → feature arrays
 ├── generate_partitions.py      # Stage 2: feature arrays → per-hospital .npz
 ├── select_cohort.py            # Stage 3: select hospitals → exported cohort
@@ -177,13 +179,15 @@ Fed-eICU/
 ```bibtex
 @misc{fed-eicu,
   title  = {Fed-eICU: Benchmarking Federated Learning under Natural Cross-Site Heterogeneity},
-  author = {Mueller, Brian},
-  year   = {2024},
+  author = {Mueller, Brianna},
+  year   = {2026},
   url    = {https://github.com/TODO/Fed-eICU}
 }
 ```
 
 Please also cite the [eICU Collaborative Research Database](https://doi.org/10.1038/sdata.2018.178).
+
+- **eICU-CRD**: Pollard, T. J., Johnson, A. E., Raffa, J. D., Celi, L. A., Mark, R. G., & Badawi, O. (2018). The eICU Collaborative Research Database, a freely available multi-center database for critical care research. *Scientific Data*, 5(1), 1-13.
 
 ---
 
@@ -192,3 +196,5 @@ Please also cite the [eICU Collaborative Research Database](https://doi.org/10.1
 - **Code**: [Apache 2.0](LICENSE)
 - **Demo data**: [ODbL](data/demo_raw/LICENSE.txt) via [eICU-CRD Demo](https://physionet.org/content/eicu-crd-demo/)
 - **Full eICU**: requires [PhysioNet DUA](https://physionet.org/content/eicu-crd/), not included
+
+

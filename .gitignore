@@ -19,6 +19,9 @@ logs/
 *.out
 *.err
 
+# SGE job scripts (user-specific)
+run_pipeline_sge.sh
+
 # IDE / OS
 .claude/
 .vscode/
