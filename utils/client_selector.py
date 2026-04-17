@@ -228,17 +228,26 @@ def export_cohort(cohort, output_dir, compress=True):
         labels, counts = np.unique(y_all, return_counts=True)
         label_counts.append([[int(l), int(c)] for l, c in zip(labels, counts)])
 
+    selection = meta.get("selection", {})
     config = {
+        # Selection settings
         "task": meta.get("task"),
         "num_clients": len(clients),
+        "sort_mode": selection.get("sort_mode", "size"),
+        "min_size": selection.get("min_size", 10),
+        "min_prev": selection.get("min_prev", 0.0),
+        "min_minority": selection.get("min_minority", 0),
+        "train_ratio": selection.get("train_ratio", 0.75),
+        "seed": selection.get("seed", 1),
+        # Data shape
         "num_classes": int(meta.get("num_classes", 2)),
+        "max_seq_len": int(meta.get("max_seq_len", 0)),
         "n_ts_features": int(meta.get("n_ts_features", 0)),
         "n_static_features": int(meta.get("n_static_features", 0)),
         "n_flat_features": int(meta.get("n_flat_features", 0)),
         "n_diag_features": int(meta.get("n_diag_features", 0)),
-        "max_seq_len": int(meta.get("max_seq_len", 0)),
+        # Per-client data
         "hospital_ids": meta.get("client_ids", []),
-        "selection": meta.get("selection", {}),
         "client_label_counts": label_counts,
     }
     # Custom serialization so client_label_counts gets one client per line
