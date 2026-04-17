@@ -19,14 +19,18 @@ The repo includes the [eICU demo dataset](https://physionet.org/content/eicu-crd
 ```bash
 pip install numpy pandas scikit-learn pyarrow pyyaml
 
-python preprocess.py                                # stage 1: raw CSVs → feature arrays
-python generate_partitions.py --task mortality_24h   # stage 2: feature arrays → per-hospital .npz
-python select_cohort.py --task mortality_24h         # stage 3: select hospitals → ready-to-use cohort
+bash run_pipeline.sh
 ```
 
-This produces `data/cohorts/mortality_24h/` with per-client train/test `.npz` files and a `config.json`. Selection parameters (number of clients, ranking, filters) are configured in `configs.yaml` or passed on the CLI.
+This runs all three stages for every task and produces ready-to-use cohorts in `data/cohorts/`. The individual stages are:
 
-You can also use `select_clients()` directly in Python for more control:
+1. **`preprocess.py`** -- raw eICU CSVs → cleaned feature arrays in `data/processed/`
+2. **`generate_partitions.py --task <task>`** -- groups patients by hospital, writes one `.npz` per hospital + `manifest.json` to `data/partitions/<task>/`
+3. **`select_cohort.py --task <task>`** -- selects and ranks hospitals, splits train/test, exports per-client `.npz` files to `data/cohorts/<task>/`
+
+Stages 1 and 2 are deterministic and cached -- they skip if outputs already exist. Stage 3 is cheap and parameterized; selection parameters (number of clients, ranking, filters) are configured in `configs.yaml` or passed on the CLI.
+
+For direct use in Python:
 
 ```python
 from utils.client_selector import select_clients
