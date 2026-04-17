@@ -76,9 +76,53 @@ Each `.npz` contains:
 - `y` -- labels (int64)
 - `patient_ids` -- for traceability (int64)
 
+Example `partition.json`:
+
+```json
+{
+  "task": "mortality_24h",
+  "num_classes": 2,
+  "max_seq_len": 24,
+  "n_ts_features": 108,
+  "n_static_features": 355,
+  "n_flat_features": 65,
+  "n_diag_features": 290,
+  "total_hospitals": 196,
+  "total_patients": 180765,
+  "hospitals": {
+    "56": { "n_patients": 252, "label_counts": {"0": 240, "1": 12}, "prevalence": 0.048 },
+    "73": { "n_patients": 6594, "label_counts": {"0": 6052, "1": 542}, "prevalence": 0.082 },
+    ...
+  }
+}
+```
+
 ### Stage 3: Cohort Selection (`select_cohort.py`)
 
-Selects hospitals from a materialized partition, splits train/test per hospital, and exports ready-to-use per-client `.npz` files to `data/cohorts/<task>/`. Cheap and parameterized -- no re-materialization needed.
+Selects hospitals from a materialized partition, splits train/test per hospital, and exports ready-to-use per-client `.npz` files and a `config.json` to `data/cohorts/<task>/`. Cheap and parameterized -- no re-materialization needed.
+
+Example `config.json`:
+
+```json
+{
+  "task": "mortality_24h",
+  "num_clients": 20,
+  "sort_mode": "size",
+  "min_size": 10,
+  "train_ratio": 0.75,
+  "seed": 1,
+  "num_classes": 2,
+  "max_seq_len": 24,
+  "n_ts_features": 108,
+  "n_static_features": 355,
+  "hospital_ids": [73, 264, 167, ...],
+  "client_label_counts": [
+    [[0, 6052], [1, 542]],
+    [[0, 4396], [1, 519]],
+    ...
+  ]
+}
+```
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
