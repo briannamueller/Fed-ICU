@@ -184,3 +184,65 @@ def select_clients(
     meta["client_ids"] = [c["hospital_id"] for c in clients]
 
     return {"clients": clients, "metadata": meta}
+
+
+def export_cohort(cohort, output_dir, compress=True):
+    """Write a cohort to disk as per-client .npz files + config.json.
+
+    Creates:
+        output_dir/
+            config.json      — metadata + selection params + per-client label counts
+            train/0.npz ... train/{N-1}.npz
+            test/0.npz  ... test/{N-1}.npz
+
+    Each .npz contains x_ts (object), x_static (float32), y (int64).
+
+    Args:
+        cohort: return value of select_clients().
+        output_dir: directory to write to (created if needed).
+        compress: use np.savez_compressed (default True).
+    """
+    output_dir = Path(output_dir)
+    train_dir = output_dir / "train"
+    test_dir = output_dir / "test"
+    train_dir.mkdir(parents=True, exist_ok=True)
+    test_dir.mkdir(parents=True, exist_ok=True)
+
+    save = np.savez_compressed if compress else np.savez
+    meta = cohort["metadata"]
+    clients = cohort["clients"]
+    label_counts = []
+
+    for idx, client in enumerate(clients):
+        # Train
+        tr = client["train"]
+        save(train_dir / f"{idx}.npz",
+             x_ts=tr["x_ts"], x_static=tr["x_static"], y=tr["y"])
+        # Test
+        te = client["test"]
+        save(test_dir / f"{idx}.npz",
+             x_ts=te["x_ts"], x_static=te["x_static"], y=te["y"])
+
+        # Label counts
+        y_all = np.concatenate([tr["y"], te["y"]])
+        labels, counts = np.unique(y_all, return_counts=True)
+        label_counts.append({str(int(l)): int(c) for l, c in zip(labels, counts)})
+
+    config = {
+        "task": meta.get("task"),
+        "num_clients": len(clients),
+        "num_classes": int(meta.get("num_classes", 2)),
+        "n_ts_features": int(meta.get("n_ts_features", 0)),
+        "n_static_features": int(meta.get("n_static_features", 0)),
+        "n_flat_features": int(meta.get("n_flat_features", 0)),
+        "n_diag_features": int(meta.get("n_diag_features", 0)),
+        "max_seq_len": int(meta.get("max_seq_len", 0)),
+        "hospital_ids": meta.get("client_ids", []),
+        "selection": meta.get("selection", {}),
+        "client_label_counts": label_counts,
+    }
+    with open(output_dir / "config.json", "w") as f:
+        json.dump(config, f, indent=2)
+        f.write("\n")
+
+    print(f"[export] {len(clients)} clients → {output_dir}")

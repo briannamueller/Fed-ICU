@@ -51,4 +51,12 @@ for TASK in mortality_24h mortality_48h los_3day los_7day; do
         --output-dir "${PARTITIONS_DIR}"
 done
 
+# ---- Stage 3: Select and export cohorts for each task ----
+for TASK in mortality_24h mortality_48h los_3day los_7day; do
+    echo "==> [$(date)] Selecting cohort for ${TASK}..."
+    python select_cohort.py \
+        --task "${TASK}" \
+        --partitions-dir "${PARTITIONS_DIR}"
+done
+
 echo "==> [$(date)] Pipeline complete."

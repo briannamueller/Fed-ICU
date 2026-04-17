@@ -12,6 +12,7 @@ build/
 data/raw/
 data/processed/
 data/partitions/
+data/cohorts/
 
 # Logs
 logs/

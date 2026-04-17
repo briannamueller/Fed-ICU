@@ -61,6 +61,19 @@ paradigm: single_horizon
 
 # Minimum requirements for a hospital to be materialized.
 # These are intentionally loose — stricter filtering happens at
-# experiment time via select_clients().
+# experiment time via select_cohort.py.
 min_size: 2                   # minimum patients per hospital
 min_minority: 1               # minimum minority-class samples
+
+# ── Client Selection ─────────────────────────────────────────────────
+# Used by select_cohort.py (stage 3). These control which hospitals
+# are selected from the materialized partition and how they are split.
+
+selection:
+  num_clients: 20             # number of hospitals (0 = all qualifying)
+  sort_mode: size             # ranking: "size", "positives", or "prevalence"
+  min_size: 10                # minimum patients per hospital
+  min_prev: 0.0               # minimum positive-class prevalence
+  min_minority: 0             # minimum minority-class samples
+  train_ratio: 0.75           # train fraction (stratified per hospital)
+  seed: 1                     # random seed for splitting
