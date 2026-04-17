@@ -25,7 +25,7 @@ bash run_pipeline.sh
 This runs all three stages for every task and produces ready-to-use cohorts in `data/cohorts/`. The individual stages are:
 
 1. **`preprocess.py`** -- raw eICU CSVs → cleaned feature arrays in `data/processed/`
-2. **`generate_partitions.py --task <task>`** -- groups patients by hospital, writes one `.npz` per hospital + `manifest.json` to `data/partitions/<task>/`
+2. **`generate_partitions.py --task <task>`** -- groups patients by hospital, writes one `.npz` per hospital + `partition.json` to `data/partitions/<task>/`
 3. **`select_cohort.py --task <task>`** -- selects and ranks hospitals, splits train/test, exports per-client `.npz` files to `data/cohorts/<task>/`
 
 Stages 1 and 2 are deterministic and cached -- they skip if outputs already exist. Stage 3 is cheap and parameterized; selection parameters (number of clients, ranking, filters) are configured in `configs.yaml` or passed on the CLI.
@@ -46,7 +46,15 @@ cohort = select_clients(
 
 ### Using full eICU data
 
-The full dataset requires [PhysioNet credentialed access](https://physionet.org/content/eicu-crd/). Set `eicu_dir` in `configs.yaml` or pass `--eicu-dir /path/to/eicu` on the command line.
+The full dataset requires [PhysioNet credentialed access](https://physionet.org/content/eicu-crd/):
+
+1. Create a [PhysioNet](https://physionet.org/) account
+2. Complete the required CITI training
+3. Request access to the [eICU Collaborative Research Database](https://physionet.org/content/eicu-crd/2.0/)
+4. Download and extract the data
+5. Set `eicu_dir` in `configs.yaml` or pass `--eicu-dir /path/to/eicu` on the command line.
+
+
 
 ---
 
@@ -60,7 +68,7 @@ Hourly timeseries binning, double-threshold prevalence filtering, 5/95 percentil
 
 ### Stage 2: Partitioning (`generate_partitions.py`)
 
-Groups patients by hospital and saves one `.npz` per hospital plus a `manifest.json` with per-hospital metadata (counts, label distributions, prevalence).
+Groups patients by hospital and saves one `.npz` per hospital plus a `partition.json` with per-hospital metadata (counts, label distributions, prevalence).
 
 Each `.npz` contains:
 - `x_ts` -- variable-length timeseries per patient (object array of float32)

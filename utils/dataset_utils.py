@@ -158,7 +158,7 @@ def save_hospital_npz(path, x_ts, x_static, y, patient_ids):
                         y=y_arr, patient_ids=pid_arr)
 
 
-def write_manifest(path, manifest_dict):
+def write_partition_meta(path, manifest_dict):
     """Write manifest.json with readable formatting."""
     with open(path, 'w') as f:
         json.dump(manifest_dict, f, indent=2)

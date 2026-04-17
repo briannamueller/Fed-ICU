@@ -1,6 +1,6 @@
 """Client selection and splitting for federated learning experiments.
 
-Reads a materialized dataset (manifest.json + per-hospital .npz files
+Reads a materialized dataset (partition.json + per-hospital .npz files
 written by generate_clients.py) and returns per-client train/test data
 ready for FL training.
 
@@ -18,9 +18,9 @@ import numpy as np
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
 
-def load_manifest(partition_dir):
+def load_partition_meta(partition_dir):
     """Load and return the manifest dict from a materialized partition."""
-    manifest_path = Path(partition_dir) / "manifest.json"
+    manifest_path = Path(partition_dir) / "partition.json"
     with open(manifest_path) as f:
         return json.load(f)
 
@@ -91,7 +91,7 @@ def select_clients(
     """Select hospitals from a materialized partition and split for FL.
 
     Args:
-        partition_dir: path to directory containing manifest.json + hospitals/.
+        partition_dir: path to directory containing partition.json + hospitals/.
         num_clients: number of top hospitals to keep (0 = all qualifying).
         sort_mode: how to rank hospitals for top-k — "size" (patient count),
             "positives" (positive-class count), or "prevalence" (positive rate).
@@ -111,7 +111,7 @@ def select_clients(
             "metadata": manifest metadata + selection parameters
     """
     partition_dir = Path(partition_dir)
-    manifest = load_manifest(partition_dir)
+    manifest = load_partition_meta(partition_dir)
     hospitals = manifest["hospitals"]
 
     # ── Filter ──

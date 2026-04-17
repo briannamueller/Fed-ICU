@@ -78,7 +78,7 @@ def main() -> None:
     partitions_dir = Path(args.partitions_dir) if args.partitions_dir else _REPO_ROOT / "data" / "partitions"
     partition_dir = partitions_dir / args.task
 
-    if not (partition_dir / "manifest.json").exists():
+    if not (partition_dir / "partition.json").exists():
         sys.exit(
             f"[select_cohort] Partition not found: {partition_dir}\n"
             f"Run: python generate_partitions.py --task {args.task}"

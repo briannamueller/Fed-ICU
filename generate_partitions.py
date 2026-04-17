@@ -2,7 +2,7 @@
 """Materialize per-hospital FL client data from preprocessed eICU output.
 
 Each hospital is saved as an individual .npz file containing all of its
-patients' data (unsplit). A manifest.json records per-hospital metadata
+patients' data (unsplit). A partition.json records per-hospital metadata
 so that experiment-time client selection (top-k, filtering, train/test
 splitting) can happen without re-materializing data.
 
@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 from utils.dataset_utils import (
-    save_hospital_npz, write_manifest, load_config, apply_config_defaults,
+    save_hospital_npz, write_partition_meta, load_config, apply_config_defaults,
 )
 
 
@@ -390,7 +390,7 @@ def main():
         output_root = Path.cwd() / output_root
     dataset_dir = output_root / build_partition_id(args)
 
-    if (dataset_dir / "manifest.json").exists():
+    if (dataset_dir / "partition.json").exists():
         print(f"\nPartition already exists at {dataset_dir}. Skipping.")
         return
 
@@ -449,7 +449,7 @@ def main():
         "hospitals": hospital_meta,
     }
 
-    write_manifest(dataset_dir / "manifest.json", manifest)
+    write_partition_meta(dataset_dir / "partition.json", manifest)
 
     print(f"\nMaterialized {len(hospital_meta)} hospitals ({total_patients} patients) "
           f"to {dataset_dir}")
