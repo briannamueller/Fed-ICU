@@ -21,6 +21,10 @@ logs/
 
 # SGE job scripts (user-specific)
 run_pipeline_sge.sh
+remat_*.sh
+
+# Papers / reference PDFs
+*.pdf
 
 # IDE / OS
 .claude/
