@@ -19,16 +19,19 @@ The repo includes the [eICU demo dataset](https://physionet.org/content/eicu-crd
 ```bash
 pip install numpy pandas scikit-learn pyarrow pyyaml
 
-python preprocess.py                                # raw CSVs → feature arrays
-python generate_partitions.py --task mortality_24h   # feature arrays → per-hospital .npz
+python preprocess.py                                # stage 1: raw CSVs → feature arrays
+python generate_partitions.py --task mortality_24h   # stage 2: feature arrays → per-hospital .npz
+python select_cohort.py --task mortality_24h         # stage 3: select hospitals → ready-to-use cohort
 ```
 
-Then select clients for an experiment:
+This produces `data/cohorts/mortality_24h/` with per-client train/test `.npz` files and a `config.json`. Selection parameters (number of clients, ranking, filters) are configured in `configs.yaml` or passed on the CLI.
+
+You can also use `select_clients()` directly in Python for more control:
 
 ```python
 from utils.client_selector import select_clients
 
-result = select_clients(
+cohort = select_clients(
     "data/partitions/mortality_24h",
     num_clients=20,
     sort_mode="size",
@@ -61,9 +64,9 @@ Each `.npz` contains:
 - `y` -- labels (int64)
 - `patient_ids` -- for traceability (int64)
 
-### Stage 3: Client Selection (`select_clients()`)
+### Stage 3: Cohort Selection (`select_cohort.py`)
 
-Cheap, parameterized selection at experiment time -- no re-materialization needed.
+Selects hospitals from a materialized partition, splits train/test per hospital, and exports ready-to-use per-client `.npz` files to `data/cohorts/<task>/`. Cheap and parameterized -- no re-materialization needed.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -91,7 +94,7 @@ Cheap, parameterized selection at experiment time -- no re-materialization neede
 
 ## Configuration
 
-All defaults live in `configs.yaml`. Both `preprocess.py` and `generate_partitions.py` read it automatically; CLI arguments override any value. Pass `--config /path/to/custom.yaml` to use a different file.
+All defaults live in `configs.yaml`. All three pipeline scripts read it automatically; CLI arguments override any value. Pass `--config /path/to/custom.yaml` to use a different file.
 
 ---
 
@@ -99,12 +102,13 @@ All defaults live in `configs.yaml`. Both `preprocess.py` and `generate_partitio
 
 ```
 Fed-eICU/
-├── configs.yaml                # Default configuration
+├── configs.yaml                # Default configuration for all stages
 ├── preprocess.py               # Stage 1: raw eICU → feature arrays
 ├── generate_partitions.py      # Stage 2: feature arrays → per-hospital .npz
+├── select_cohort.py            # Stage 3: select hospitals → exported cohort
 ├── preprocessing/              # Feature engineering modules
 ├── utils/
-│   ├── client_selector.py      # select_clients()
+│   ├── client_selector.py      # select_clients(), export_cohort()
 │   └── dataset_utils.py        # Config loading, NPZ helpers
 └── data/
     └── demo_raw/               # eICU demo dataset (ODbL licensed)
