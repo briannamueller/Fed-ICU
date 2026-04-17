@@ -1,0 +1,134 @@
+# Fed-eICU: Benchmarking Federated Learning under Natural Cross-Site Heterogeneity
+
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
+Benchmarking federated learning using naturally distributed clinical data from the [eICU Collaborative Research Database](https://eicu-crd.mit.edu/).
+
+---
+
+## Overview
+
+The eICU Collaborative Research Database contains over 200,000 ICU stays from 208 U.S. hospitals, making it one of the few large-scale, publicly available clinical datasets where federated clients can be defined by real institutional boundaries rather than artificial partitions. Most federated learning benchmarks simulate heterogeneity by splitting datasets like MNIST or CIFAR across clients in ways that may not fully capture the heterogeneity encountered in real-world deployments. Fed-eICU instead provides naturally heterogeneous partitions defined by hospital identity, where differences in patient populations, clinical practices, and data availability emerge organically across sites. Fed-eICU is an end-to-end pipeline that takes raw eICU data downloaded from PhysioNet and produces ready-to-use client datasets, with the goal of making real-world heterogeneous benchmarking accessible to the federated learning research community.
+
+---
+
+## Quickstart
+
+The repo includes the [eICU demo dataset](https://physionet.org/content/eicu-crd-demo/) so you can run the full pipeline without PhysioNet credentials.
+
+```bash
+pip install numpy pandas scikit-learn pyarrow pyyaml
+
+python preprocess.py                                # raw CSVs → feature arrays
+python generate_partitions.py --task mortality_24h   # feature arrays → per-hospital .npz
+```
+
+Then select clients for an experiment:
+
+```python
+from utils.client_selector import select_clients
+
+result = select_clients(
+    "data/partitions/mortality_24h",
+    num_clients=20,
+    sort_mode="size",
+    train_ratio=0.75,
+    seed=42,
+)
+```
+
+### Using full eICU data
+
+The full dataset requires [PhysioNet credentialed access](https://physionet.org/content/eicu-crd/). Set `eicu_dir` in `configs.yaml` or pass `--eicu-dir /path/to/eicu` on the command line.
+
+---
+
+## Pipeline
+
+### Stage 1: Preprocessing (`preprocess.py`)
+
+Raw eICU CSVs → cleaned feature arrays in `data/processed/`.
+
+Hourly timeseries binning, double-threshold prevalence filtering, 5/95 percentile normalization, GRU-D-style exponential decay missingness masks, forward-fill imputation, diagnosis code extraction, demographic one-hot encoding, and 70/15/15 train/val/test splitting.
+
+### Stage 2: Partitioning (`generate_partitions.py`)
+
+Groups patients by hospital and saves one `.npz` per hospital plus a `manifest.json` with per-hospital metadata (counts, label distributions, prevalence).
+
+Each `.npz` contains:
+- `x_ts` -- variable-length timeseries per patient (object array of float32)
+- `x_static` -- flat + diagnosis features (float32)
+- `y` -- labels (int64)
+- `patient_ids` -- for traceability (int64)
+
+### Stage 3: Client Selection (`select_clients()`)
+
+Cheap, parameterized selection at experiment time -- no re-materialization needed.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `num_clients` | 0 (all) | Number of hospitals to select |
+| `sort_mode` | `"size"` | Ranking: `"size"`, `"positives"`, or `"prevalence"` |
+| `min_size` | 10 | Minimum patients per hospital |
+| `min_prev` | 0.0 | Minimum positive-class prevalence |
+| `min_minority` | 0 | Minimum minority-class samples |
+| `train_ratio` | 0.75 | Train fraction (stratified per hospital) |
+| `seed` | 1 | Random seed |
+| `outer_kfold` | None | K-fold CV instead of single split |
+
+---
+
+## Tasks
+
+| Task | Window | Description |
+|------|--------|-------------|
+| `mortality_24h` | 24h | In-hospital mortality |
+| `mortality_48h` | 48h | In-hospital mortality |
+| `los_3day` | 72h | Length of stay > 3 days |
+| `los_7day` | 168h | Length of stay > 7 days |
+
+---
+
+## Configuration
+
+All defaults live in `configs.yaml`. Both `preprocess.py` and `generate_partitions.py` read it automatically; CLI arguments override any value. Pass `--config /path/to/custom.yaml` to use a different file.
+
+---
+
+## Project Structure
+
+```
+Fed-eICU/
+├── configs.yaml                # Default configuration
+├── preprocess.py               # Stage 1: raw eICU → feature arrays
+├── generate_partitions.py      # Stage 2: feature arrays → per-hospital .npz
+├── preprocessing/              # Feature engineering modules
+├── utils/
+│   ├── client_selector.py      # select_clients()
+│   └── dataset_utils.py        # Config loading, NPZ helpers
+└── data/
+    └── demo_raw/               # eICU demo dataset (ODbL licensed)
+```
+
+---
+
+## Citation
+
+```bibtex
+@misc{fed-eicu,
+  title  = {Fed-eICU: Benchmarking Federated Learning under Natural Cross-Site Heterogeneity},
+  author = {Mueller, Brian},
+  year   = {2024},
+  url    = {https://github.com/TODO/Fed-eICU}
+}
+```
+
+Please also cite the [eICU Collaborative Research Database](https://doi.org/10.1038/sdata.2018.178).
+
+---
+
+## License
+
+- **Code**: [Apache 2.0](LICENSE)
+- **Demo data**: [ODbL](data/demo_raw/LICENSE.txt) via [eICU-CRD Demo](https://physionet.org/content/eicu-crd-demo/)
+- **Full eICU**: requires [PhysioNet DUA](https://physionet.org/content/eicu-crd/), not included

@@ -1,0 +1,66 @@
+# Fed-ICU default configuration
+#
+# This file documents the default settings for each pipeline stage.
+# Scripts read these as defaults; CLI arguments override any value here.
+#
+#   python preprocess.py --config configs.yaml --eicu-dir data/raw
+#   python generate_partitions.py --config configs.yaml --task mortality_24h --eicu-dir data/raw
+
+# ── Paths ────────────────────────────────────────────────────────────
+# Set eicu_dir to your local copy of the eICU-CRD CSVs (requires
+# PhysioNet credentialed access: https://physionet.org/content/eicu-crd/).
+eicu_dir: data/demo_raw
+output_dir: data/processed      # preprocessing output
+partitions_dir: data/partitions # materialized FL partitions
+
+# ── Preprocessing ────────────────────────────────────────────────────
+
+# Timeseries feature filtering (double-threshold prevalence filter):
+#   Keep features where ≥ within_prev fraction of patients in a hospital
+#   have ≥1 observation, AND ≥ cross_prev fraction of hospitals pass.
+within_prev: 0.25
+cross_prev: 0.70
+
+# Timeseries normalization: 5th/95th percentile min-max to [-1, 1],
+# then clip to [-4, 4].
+clip_range: [-4, 4]
+
+# Missingness mask mode: "binary" or "exponential_decay" (GRU-D-style).
+mask_mode: exponential_decay
+decay_rate: 1.3333            # 4/3, controls decay speed
+
+# Maximum timeseries length kept during preprocessing (hours).
+length_limit_hours: 336       # 14 days
+
+# Diagnosis code filtering: drop codes with prevalence below this
+# threshold across the full dataset.
+min_dx_prevalence: 0.01       # 1%
+
+# Train/val/test split ratios and seed.
+split_seed: 9
+test_fraction: 0.15           # 15% test, then 15/85 of remainder → val
+                              # effective split: 70/15/15
+
+# ── Partitioning ─────────────────────────────────────────────────────
+
+# Tasks and their observation windows (hours).
+tasks:
+  mortality_24h: 24
+  mortality_48h: 48
+  los_3day: 72
+  los_7day: 168
+
+# Feature options for materialization.
+include_diagnoses: true
+diag_window: "5h"
+drop_hospital_vars: false
+
+# Label paradigm: "single_horizon" (one label per patient) or
+# "rolling" (per-timestep labels).
+paradigm: single_horizon
+
+# Minimum requirements for a hospital to be materialized.
+# These are intentionally loose — stricter filtering happens at
+# experiment time via select_clients().
+min_size: 2                   # minimum patients per hospital
+min_minority: 1               # minimum minority-class samples

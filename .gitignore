@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Data (regenerate from source eICU — see README)
+data/raw/
+data/processed/
+data/partitions/
+
+# Logs
+logs/
+*.out
+*.err
+
+# IDE / OS
+.claude/
+.vscode/
+.idea/
+.DS_Store
