@@ -52,10 +52,13 @@ def _split_hospital(data, train_ratio, seed, rng):
     """Stratified train/test split for one hospital's data."""
     summary = _summary_labels(data["y"])
     rs = int(rng.integers(0, np.iinfo(np.int32).max))
+    # Fall back to non-stratified split if any class has <2 samples
+    _, counts = np.unique(summary, return_counts=True)
+    stratify = summary if counts.min() >= 2 else None
     tr_idx, te_idx = train_test_split(
         np.arange(len(summary)),
         train_size=train_ratio,
-        stratify=summary,
+        stratify=stratify,
         random_state=rs,
     )
     return (

@@ -14,7 +14,7 @@ The eICU Collaborative Research Database contains over 200,000 ICU stays from 20
 
 ## Quickstart
 
-Requires Python 3.8+. The repo includes the [eICU demo dataset](https://physionet.org/content/eicu-crd-demo/) so you can run the full pipeline without PhysioNet credentials.
+Requires Python 3.8+. The demo dataset needs ~3 GB of RAM; the full eICU dataset needs ~64 GB. The repo includes the [eICU demo dataset](https://physionet.org/content/eicu-crd-demo/) so you can run the full pipeline without PhysioNet credentials.
 
 ```bash
 pip install -r requirements.txt
