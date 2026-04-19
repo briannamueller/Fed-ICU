@@ -28,7 +28,7 @@ This runs all three stages for every task and produces ready-to-use cohorts in `
 2. **`generate_partitions.py --task <task>`** -- groups patients by hospital, writes one `.npz` per hospital + `partition.json` to `data/partitions/<task>/`
 3. **`select_cohort.py --task <task>`** -- selects and ranks hospitals, splits train/test, exports per-client `.npz` files to `data/cohorts/<task>/`
 
-Stages 1 and 2 are deterministic and cached -- they skip if outputs already exist. Stage 3 is cheap and parameterized; selection parameters (number of clients, ranking, filters) are configured in `configs.yaml` or passed on the CLI.
+Stages 1 and 2 are deterministic and cached -- they skip if outputs already exist (pass `--force` to rebuild). Stage 3 is cheap and parameterized; selection parameters (number of clients, ranking, filters) are configured in `configs.yaml` or passed on the CLI.
 
 For direct use in Python:
 
@@ -109,12 +109,16 @@ Example `config.json`:
   "num_clients": 20,
   "sort_mode": "size",
   "min_size": 10,
+  "min_prev": 0.0,
+  "min_minority": 0,
   "train_ratio": 0.75,
   "seed": 1,
   "num_classes": 2,
   "max_seq_len": 24,
   "n_ts_features": 108,
   "n_static_features": 355,
+  "n_flat_features": 65,
+  "n_diag_features": 290,
   "hospital_ids": [73, 264, 167, ...],
   "client_label_counts": [
     [[0, 6052], [1, 542]],
@@ -126,7 +130,7 @@ Example `config.json`:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `num_clients` | 0 (all) | Number of hospitals to select |
+| `num_clients` | 20 | Number of hospitals to select (0 = all) |
 | `sort_mode` | `"size"` | Ranking: `"size"`, `"positives"`, or `"prevalence"` |
 | `min_size` | 10 | Minimum patients per hospital |
 | `min_prev` | 0.0 | Minimum positive-class prevalence |
@@ -139,7 +143,7 @@ Example `config.json`:
 
 ## Tasks
 
-| Task | Window | Description |
+| Task | Observation Window | Description |
 |------|--------|-------------|
 | `mortality_24h` | 24h | In-hospital mortality |
 | `mortality_48h` | 48h | In-hospital mortality |
@@ -196,5 +200,3 @@ Please also cite the [eICU Collaborative Research Database](https://doi.org/10.1
 - **Code**: [Apache 2.0](LICENSE)
 - **Demo data**: [ODbL](data/demo_raw/LICENSE.txt) via [eICU-CRD Demo](https://physionet.org/content/eicu-crd-demo/)
 - **Full eICU**: requires [PhysioNet DUA](https://physionet.org/content/eicu-crd/), not included
-
-
