@@ -185,7 +185,7 @@ Fed-eICU/
   title  = {Fed-eICU: Benchmarking Federated Learning under Natural Cross-Site Heterogeneity},
   author = {Mueller, Brianna},
   year   = {2026},
-  url    = {https://github.com/TODO/Fed-eICU}
+  url    = {https://github.com/briannamueller/Fed-ICU}
 }
 ```
 
